@@ -72,6 +72,23 @@ def post_to_instagram(image_url, caption):
     resp.raise_for_status()
     creation_id = resp.json()["id"]
 
+    # Wait for the container to finish processing before publishing
+    status_url = f"https://graph.instagram.com/v21.0/{creation_id}"
+    for attempt in range(10):
+        status_resp = requests.get(
+            status_url,
+            params={"fields": "status_code", "access_token": IG_ACCESS_TOKEN},
+            timeout=30,
+        )
+        status_resp.raise_for_status()
+        status = status_resp.json().get("status_code")
+        print(f"Container status check {attempt + 1}: {status}")
+        if status == "FINISHED":
+            break
+        time.sleep(5)
+    else:
+        raise RuntimeError(f"Container never finished processing, last status: {status}")
+
     publish_url = f"https://graph.instagram.com/v21.0/{IG_USER_ID}/media_publish"
     publish_params = {
         "creation_id": creation_id,
