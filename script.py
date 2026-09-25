@@ -12,7 +12,6 @@ IG_USER_ID = os.environ["IG_USER_ID"]
 
 
 def generate_concept():
-    """Ask Groq for an image prompt + caption."""
     url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {
         "Authorization": f"Bearer {GROQ_API_KEY}",
@@ -31,3 +30,79 @@ def generate_concept():
                     '"caption": "a short engaging Instagram caption with 2-3 relevant emojis"}'
                 ),
             }
+        ],
+    }
+    resp = requests.post(url, headers=headers, json=payload, timeout=60)
+    resp.raise_for_status()
+    content = resp.json()["choices"][0]["message"]["content"]
+    return json.loads(content)
+
+
+def generate_image(prompt):
+    url = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0"
+    headers = {"Authorization": f"Bearer {HF_API_KEY}"}
+
+    resp = None
+    for attempt in range(6):
+        resp = requests.post(url, headers=headers, json={"inputs": prompt}, timeout=120)
+        content_type = resp.headers.get("content-type", "")
+        if resp.status_code == 200 and content_type.startswith("image"):
+            return resp.content
+        print(f"Attempt {attempt + 1}: model not ready yet ({resp.status_code}), waiting...")
+        time.sleep(20)
+
+    raise RuntimeError(f"Image generation failed after retries: {resp.status_code} {resp.text[:300]}")
+
+
+def upload_to_imgbb(image_bytes):
+    url = "https://api.imgbb.com/1/upload"
+    payload = {
+        "key": IMGBB_API_KEY,
+        "image": base64.b64encode(image_bytes).decode("utf-8"),
+    }
+    resp = requests.post(url, data=payload, timeout=60)
+    resp.raise_for_status()
+    return resp.json()["data"]["url"]
+
+
+def post_to_instagram(image_url, caption):
+    create_url = f"https://graph.instagram.com/v21.0/{IG_USER_ID}/media"
+    create_params = {
+        "image_url": image_url,
+        "caption": caption,
+        "access_token": IG_ACCESS_TOKEN,
+    }
+    resp = requests.post(create_url, params=create_params, timeout=60)
+    resp.raise_for_status()
+    creation_id = resp.json()["id"]
+
+    publish_url = f"https://graph.instagram.com/v21.0/{IG_USER_ID}/media_publish"
+    publish_params = {
+        "creation_id": creation_id,
+        "access_token": IG_ACCESS_TOKEN,
+    }
+    resp2 = requests.post(publish_url, params=publish_params, timeout=60)
+    resp2.raise_for_status()
+    return resp2.json()
+
+
+def main():
+    print("Step 1: generating concept...")
+    concept = generate_concept()
+    print("Concept:", concept)
+
+    print("Step 2: generating image...")
+    image_bytes = generate_image(concept["image_prompt"])
+    print("Image generated, size:", len(image_bytes), "bytes")
+
+    print("Step 3: uploading to ImgBB...")
+    image_url = upload_to_imgbb(image_bytes)
+    print("Hosted at:", image_url)
+
+    print("Step 4: posting to Instagram...")
+    result = post_to_instagram(image_url, concept["caption"])
+    print("Posted successfully:", result)
+
+
+if __name__ == "__main__":
+    main()
