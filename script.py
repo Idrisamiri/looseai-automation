@@ -39,20 +39,16 @@ def generate_concept():
 
 
 def generate_image(prompt):
-    url = "https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell"
-    headers = {"Authorization": f"Bearer {HF_API_KEY}"}
+    from huggingface_hub import InferenceClient
+    import io
 
-    resp = None
-    for attempt in range(6):
-        resp = requests.post(url, headers=headers, json={"inputs": prompt}, timeout=120)
-        content_type = resp.headers.get("content-type", "")
-        if resp.status_code == 200 and content_type.startswith("image"):
-            return resp.content
-        print(f"Attempt {attempt + 1}: model not ready yet ({resp.status_code}), waiting...")
-        time.sleep(20)
+    client = InferenceClient(api_key=HF_API_KEY)
+    image = client.text_to_image(prompt, model="black-forest-labs/FLUX.1-schnell")
 
-    raise RuntimeError(f"Image generation failed after retries: {resp.status_code} {resp.text[:300]}")
-
+    buf = io.BytesIO()
+    image.save(buf, format="PNG")
+    return buf.getvalue()
+    
 
 def upload_to_imgbb(image_bytes):
     url = "https://api.imgbb.com/1/upload"
