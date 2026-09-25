@@ -39,7 +39,7 @@ def generate_concept():
 
 
 def generate_image(prompt):
-    url = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0"
+    url = "https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-xl-base-1.0"
     headers = {"Authorization": f"Bearer {HF_API_KEY}"}
 
     resp = None
