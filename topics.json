@@ -1,0 +1,14 @@
+[
+  {"id": 1, "topic": "AI Joke of the Day", "type": "humor"},
+  {"id": 2, "topic": "What If...", "type": "engagement"},
+  {"id": 3, "topic": "Future Prediction", "type": "speculative"},
+  {"id": 4, "topic": "AI Fact / News", "type": "educational"},
+  {"id": 5, "topic": "Random Commenter Reimagined", "type": "community"},
+  {"id": 6, "topic": "AI Paint of the Day", "type": "art"},
+  {"id": 7, "topic": "Daily Motivation / Quote", "type": "inspiration"},
+  {"id": 8, "topic": "AI Parallel Universe", "type": "engagement"},
+  {"id": 9, "topic": "AI Concept Fusion", "type": "art"},
+  {"id": 10, "topic": "The Micro-World", "type": "curiosity"},
+  {"id": 11, "topic": "Lost Myth & Lore", "type": "storytelling"},
+  {"id": 12, "topic": "AI Dream Architecture", "type": "visual"}
+]
