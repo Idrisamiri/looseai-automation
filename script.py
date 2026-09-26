@@ -92,6 +92,10 @@ def upload_to_imgbb(image_bytes):
     return resp.json()["data"]["url"]
 
 
+
+
+
+
 def post_to_instagram(image_url, caption):
     create_url = f"https://graph.instagram.com/v21.0/{IG_USER_ID}/media"
     create_params = {
@@ -99,11 +103,20 @@ def post_to_instagram(image_url, caption):
         "caption": caption,
         "access_token": IG_ACCESS_TOKEN,
     }
-    resp = requests.post(create_url, params=create_params, timeout=60)
-    if resp.status_code != 200:
-        print("Instagram error response:", resp.text)
+
+    resp = None
+    for attempt in range(3):
+        resp = requests.post(create_url, params=create_params, timeout=60)
+        if resp.status_code == 200:
+            break
+        print(f"Attempt {attempt + 1}: Instagram error response: {resp.text}")
+        time.sleep(10)
+
     resp.raise_for_status()
     creation_id = resp.json()["id"]
+
+    # ... the rest of the function (status check + publish) stays exactly the same
+    
 
     # Wait for the container to finish processing before publishing
     status_url = f"https://graph.instagram.com/v21.0/{creation_id}"
