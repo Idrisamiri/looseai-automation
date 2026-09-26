@@ -100,6 +100,8 @@ def post_to_instagram(image_url, caption):
         "access_token": IG_ACCESS_TOKEN,
     }
     resp = requests.post(create_url, params=create_params, timeout=60)
+    if resp.status_code != 200:
+        print("Instagram error response:", resp.text)
     resp.raise_for_status()
     creation_id = resp.json()["id"]
 
