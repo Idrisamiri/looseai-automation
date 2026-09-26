@@ -18,6 +18,9 @@ def load_topics():
         return json.load(f)
 
 
+
+
+
 def generate_concept():
     topics = load_topics()
     chosen = random.choice(topics)
@@ -38,11 +41,20 @@ def generate_concept():
                 "role": "user",
                 "content": (
                     f"Today's content theme is: \"{topic_name}\" (category: {topic_type}). "
-                    "Generate a visually striking image concept and caption for an Instagram "
-                    "account that posts AI-generated surprises, based on this theme. "
+                    "Generate a visually striking image concept AND a caption that actually "
+                    "delivers the theme's content, not just a vague tagline. Examples: if the "
+                    "theme is a joke, the caption must contain an actual joke with a punchline. "
+                    "If it's a mini-story or myth, the caption must tell a short story with a "
+                    "clear beginning and ending, not just mood-setting. If it's a fact, state the "
+                    "actual fact. If it's a question ('What if...'), pose the specific question "
+                    "itself. Stay strictly on-topic for the theme given — do not drift into an "
+                    "unrelated idea. The caption must be 2-4 short sentences MAXIMUM, under 200 "
+                    "characters total (not counting hashtags), substantive rather than a poetic "
+                    "tagline, and end with 2-3 relevant emojis and up to 2 hashtags. "
                     "Respond ONLY with valid JSON in this exact format: "
                     '{"image_prompt": "a detailed visual description for an AI image generator", '
-                    '"caption": "a short engaging Instagram caption with 2-3 relevant emojis"}'
+                    '"caption": "a short, substantive, on-topic caption ending with emojis and '
+                    'hashtags"}'
                 ),
             }
         ],
@@ -51,6 +63,9 @@ def generate_concept():
     resp.raise_for_status()
     content = resp.json()["choices"][0]["message"]["content"]
     return json.loads(content)
+    
+
+
 
 
 
