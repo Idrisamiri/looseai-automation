@@ -3,6 +3,8 @@ import json
 import time
 import base64
 import requests
+import random
+
 
 GROQ_API_KEY = os.environ["GROQ_API_KEY"]
 HF_API_KEY = os.environ["HF_API_KEY"]
@@ -11,7 +13,19 @@ IG_ACCESS_TOKEN = os.environ["IG_ACCESS_TOKEN"]
 IG_USER_ID = os.environ["IG_USER_ID"]
 
 
+def load_topics():
+    with open("topics.json", "r") as f:
+        return json.load(f)
+
+
 def generate_concept():
+    topics = load_topics()
+    chosen = random.choice(topics)
+    topic_name = chosen["topic"]
+    topic_type = chosen["type"]
+
+    print(f"Chosen topic: {topic_name} ({topic_type})")
+
     url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {
         "Authorization": f"Bearer {GROQ_API_KEY}",
@@ -23,8 +37,9 @@ def generate_concept():
             {
                 "role": "user",
                 "content": (
-                    "Generate a random, visually striking image concept for an "
-                    "Instagram account that posts AI-generated surprises. "
+                    f"Today's content theme is: \"{topic_name}\" (category: {topic_type}). "
+                    "Generate a visually striking image concept and caption for an Instagram "
+                    "account that posts AI-generated surprises, based on this theme. "
                     "Respond ONLY with valid JSON in this exact format: "
                     '{"image_prompt": "a detailed visual description for an AI image generator", '
                     '"caption": "a short engaging Instagram caption with 2-3 relevant emojis"}'
@@ -36,6 +51,7 @@ def generate_concept():
     resp.raise_for_status()
     content = resp.json()["choices"][0]["message"]["content"]
     return json.loads(content)
+
 
 
 def generate_image(prompt):
