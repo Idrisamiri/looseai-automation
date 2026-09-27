@@ -13,14 +13,11 @@ IG_ACCESS_TOKEN = os.environ["IG_ACCESS_TOKEN"]
 IG_USER_ID = os.environ["IG_USER_ID"]
 
 
-
 MASCOT_DESCRIPTION = (
     "a friendly metallic silver robot mascot with a boxy head, glowing blue "
     "square eyes, small antennas, articulated silver arms and hands, standing "
     "against a solid bright red background"
 )
-
-
 
 
 def get_random_recent_comment():
@@ -54,15 +51,9 @@ def get_random_recent_comment():
     return random.choice(real_comments)
 
 
-
-
-
 def load_topics():
     with open("topics.json", "r") as f:
         return json.load(f)
-
-
-
 
 
 def generate_concept():
@@ -141,12 +132,6 @@ def generate_concept():
     return json.loads(content)
 
 
-
-
-
-
-
-
 def generate_image(prompt):
     from huggingface_hub import InferenceClient
     import io
@@ -157,7 +142,7 @@ def generate_image(prompt):
     buf = io.BytesIO()
     image.save(buf, format="PNG")
     return buf.getvalue()
-    
+
 
 def upload_to_imgbb(image_bytes):
     url = "https://api.imgbb.com/1/upload"
@@ -168,10 +153,6 @@ def upload_to_imgbb(image_bytes):
     resp = requests.post(url, data=payload, timeout=60)
     resp.raise_for_status()
     return resp.json()["data"]["url"]
-
-
-
-
 
 
 def post_to_instagram(image_url, caption):
@@ -192,9 +173,6 @@ def post_to_instagram(image_url, caption):
 
     resp.raise_for_status()
     creation_id = resp.json()["id"]
-
-    # ... the rest of the function (status check + publish) stays exactly the same
-    
 
     # Wait for the container to finish processing before publishing
     status_url = f"https://graph.instagram.com/v21.0/{creation_id}"
