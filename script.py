@@ -138,7 +138,7 @@ if content.startswith("```"):
         content = content[4:]
     content = content.strip()
 
-return json.loads(content)
+    return json.loads(content)
 
 
 
