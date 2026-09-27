@@ -13,6 +13,50 @@ IG_ACCESS_TOKEN = os.environ["IG_ACCESS_TOKEN"]
 IG_USER_ID = os.environ["IG_USER_ID"]
 
 
+
+MASCOT_DESCRIPTION = (
+    "a friendly metallic silver robot mascot with a boxy head, glowing blue "
+    "square eyes, small antennas, articulated silver arms and hands, standing "
+    "against a solid bright red background"
+)
+
+
+
+
+def get_random_recent_comment():
+    """Fetch a real comment from a recent post, excluding the bot's own replies."""
+    media_url = f"https://graph.instagram.com/v21.0/{IG_USER_ID}/media"
+    media_resp = requests.get(
+        media_url,
+        params={"fields": "id", "limit": 5, "access_token": IG_ACCESS_TOKEN},
+        timeout=30,
+    )
+    media_resp.raise_for_status()
+    media_items = media_resp.json().get("data", [])
+
+    real_comments = []
+    for item in media_items:
+        media_id = item["id"]
+        comments_url = f"https://graph.instagram.com/v21.0/{media_id}/comments"
+        comments_resp = requests.get(
+            comments_url,
+            params={"fields": "text,username", "access_token": IG_ACCESS_TOKEN},
+            timeout=30,
+        )
+        if comments_resp.status_code != 200:
+            continue
+        for c in comments_resp.json().get("data", []):
+            if c.get("username") != "looseai.feed" and c.get("text"):
+                real_comments.append(c)
+
+    if not real_comments:
+        return None
+    return random.choice(real_comments)
+
+
+
+
+
 def load_topics():
     with open("topics.json", "r") as f:
         return json.load(f)
@@ -27,6 +71,32 @@ def generate_concept():
     topic_name = chosen["topic"]
     topic_type = chosen["type"]
 
+    spotlight_context = ""
+    spotlight_username = None
+
+    if topic_name == "Commenter Spotlight":
+        comment = get_random_recent_comment()
+        if comment:
+            spotlight_username = comment["username"]
+            spotlight_context = (
+                f"\n\nThis is a 'Commenter Spotlight' post. A real follower, "
+                f"@{spotlight_username}, left this comment: \"{comment['text']}\". "
+                f"The image must show {MASCOT_DESCRIPTION}, standing NEXT TO an "
+                "imagined character that represents this commenter, invented "
+                "based on the vibe, tone, or content of their comment. Make the "
+                "imagined character fun, flattering, or whimsical — never mocking "
+                "or embarrassing. The two characters (mascot + imagined commenter) "
+                "should look like they're interacting or posing together. "
+                f"The caption MUST include the exact text \"@{spotlight_username}\" "
+                "to tag them, thank them for the comment, and briefly explain how "
+                "the AI imagined them based on what they said."
+            )
+        else:
+            fallback = [t for t in topics if t["topic"] != "Commenter Spotlight"]
+            chosen = random.choice(fallback)
+            topic_name = chosen["topic"]
+            topic_type = chosen["type"]
+
     print(f"Chosen topic: {topic_name} ({topic_type})")
 
     url = "https://api.groq.com/openai/v1/chat/completions"
@@ -40,21 +110,18 @@ def generate_concept():
             {
                 "role": "user",
                 "content": (
-                    f"Today's content theme is: \"{topic_name}\" (category: {topic_type}). "
+                    f"Today's content theme is: \"{topic_name}\" (category: {topic_type})."
+                    f"{spotlight_context}"
                     "Generate a visually striking image concept AND a caption that actually "
-                    "delivers the theme's content, not just a vague tagline. Examples: if the "
-                    "theme is a joke, the caption must contain an actual joke with a punchline. "
-                    "If it's a mini-story or myth, the caption must tell a short story with a "
-                    "clear beginning and ending, not just mood-setting. If it's a fact, state the "
-                    "actual fact. If it's a question ('What if...'), pose the specific question "
-                    "itself. Stay strictly on-topic for the theme given — do not drift into an "
-                    "unrelated idea. The caption must be 2-4 short sentences MAXIMUM, under 200 "
-                    "characters total (not counting hashtags), substantive rather than a poetic "
-                    "tagline, and end with 2-3 relevant emojis and up to 2 hashtags. "
+                    "delivers the theme's content, not just a vague tagline. Stay strictly "
+                    "on-topic. The image_prompt must NOT include any text, words, speech "
+                    "bubbles, signs, or writing of any kind — describe the scene purely "
+                    "visually. The caption must be 2-4 short sentences, under 220 characters, "
+                    "and end with 2-3 emojis and up to 2 hashtags. "
                     "Respond ONLY with valid JSON in this exact format: "
-                    '{"image_prompt": "a detailed visual description for an AI image generator", '
-                    '"caption": "a short, substantive, on-topic caption ending with emojis and '
-                    'hashtags"}'
+                    '{"image_prompt": "a detailed visual description with NO text or writing '
+                    'elements", "caption": "a short, substantive, on-topic caption ending with '
+                    'emojis and hashtags"}'
                 ),
             }
         ],
