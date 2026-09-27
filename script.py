@@ -130,10 +130,9 @@ def generate_concept():
     resp.raise_for_status()
     content = resp.json()["choices"][0]["message"]["content"]
 
-# Strip markdown code fences if the model wrapped its JSON in them
-content = content.strip()
-
-if content.startswith("```"):
+    # Strip markdown code fences if the model wrapped its JSON in them
+    content = content.strip()
+    if content.startswith("```"):
         content = content.split("```")[1]
         if content.startswith("json"):
             content = content[4:]
