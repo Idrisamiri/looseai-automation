@@ -25,7 +25,7 @@ def get_random_recent_comment():
     media_url = f"https://graph.instagram.com/v21.0/{IG_USER_ID}/media"
     media_resp = requests.get(
         media_url,
-        params={"fields": "id", "limit": 5, "access_token": IG_ACCESS_TOKEN},
+        params={"fields": "id", "limit": 20, "access_token": IG_ACCESS_TOKEN},
         timeout=30,
     )
     media_resp.raise_for_status()
