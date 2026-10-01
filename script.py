@@ -58,7 +58,7 @@ def load_topics():
 
 def generate_concept():
     topics = load_topics()
-    chosen = random.choice(topics)
+    chosen = next(t for t in topics if t["topic"] == "Commenter Spotlight")
     topic_name = chosen["topic"]
     topic_type = chosen["type"]
 
