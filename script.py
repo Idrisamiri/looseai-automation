@@ -43,7 +43,7 @@ def get_random_recent_comment():
         if comments_resp.status_code != 200:
             continue
         for c in comments_resp.json().get("data", []):
-            if c.get("username") != "looseai.feed" and c.get("text"):
+            if c.get("username") and c.get("username") != "looseai.feed" and c.get("text"):
                 real_comments.append(c)
     print(f"Found {len(real_comments)} real comments across {len(media_items)} posts")
     if not real_comments:
