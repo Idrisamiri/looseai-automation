@@ -37,7 +37,7 @@ def get_random_recent_comment():
         comments_url = f"https://graph.instagram.com/v21.0/{media_id}/comments"
         comments_resp = requests.get(
             comments_url,
-            params={"fields": "text,username", "access_token": IG_ACCESS_TOKEN},
+            params={"fields": "text,from", "access_token": IG_ACCESS_TOKEN},
             timeout=30,
         )
         print(f"Raw comments response for media {media_id}: {comments_resp.json()}")
