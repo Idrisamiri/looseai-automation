@@ -40,18 +40,14 @@ def get_random_recent_comment():
             params={"fields": "text,from", "access_token": IG_ACCESS_TOKEN},
             timeout=30,
         )
-        print(f"Raw comments response for media {media_id}: {comments_resp.json()}")
         if comments_resp.status_code != 200:
             continue
         for c in comments_resp.json().get("data", []):
             from_obj = c.get("from", {})
             commenter_id = from_obj.get("id")
             commenter_username = from_obj.get("username")
-    if commenter_id and commenter_id != IG_USER_ID and commenter_username and c.get("text"):
-        real_comments.append({"username": commenter_username, "text": c.get("text")})
-    print(f"Found {len(real_comments)} real comments across {len(media_items)} posts")
-    for rc in real_comments:
-        print(f"  - @{rc.get('username')}: {rc.get('text')}")
+            if commenter_id and commenter_id != IG_USER_ID and commenter_username and c.get("text"):
+                real_comments.append({"username": commenter_username, "text": c.get("text")})
 
     if not real_comments:
         return None
@@ -65,7 +61,7 @@ def load_topics():
 
 def generate_concept():
     topics = load_topics()
-    chosen = next(t for t in topics if t["topic"] == "Commenter Spotlight")
+    chosen = random.choice(topics)
     topic_name = chosen["topic"]
     topic_type = chosen["type"]
 
