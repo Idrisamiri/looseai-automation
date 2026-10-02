@@ -44,9 +44,9 @@ def get_random_recent_comment():
         if comments_resp.status_code != 200:
             continue
         for c in comments_resp.json().get("data", []):
-    from_obj = c.get("from", {})
-    commenter_id = from_obj.get("id")
-    commenter_username = from_obj.get("username")
+            from_obj = c.get("from", {})
+            commenter_id = from_obj.get("id")
+            commenter_username = from_obj.get("username")
     if commenter_id and commenter_id != IG_USER_ID and commenter_username and c.get("text"):
         real_comments.append({"username": commenter_username, "text": c.get("text")})
     print(f"Found {len(real_comments)} real comments across {len(media_items)} posts")
