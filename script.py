@@ -40,6 +40,7 @@ def get_random_recent_comment():
             params={"fields": "text,username", "access_token": IG_ACCESS_TOKEN},
             timeout=30,
         )
+        print(f"Raw comments response for media {media_id}: {comments_resp.json()}")
         if comments_resp.status_code != 200:
             continue
         for c in comments_resp.json().get("data", []):
