@@ -16,6 +16,8 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
         run: pip install requests huggingface_hub pillow edge-tts
 
       - name: Generate test reel
