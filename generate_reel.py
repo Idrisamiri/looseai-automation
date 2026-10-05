@@ -18,7 +18,7 @@ def get_audio_duration(path):
         [
             "ffprobe", "-v", "error",
             "-show_entries", "format=duration",
-            "-of", "default=noprint_wrapper=1:nokey=1",
+            "-of", "default=noprint_wrappers=1:nokey=1",
             path,
         ],
         capture_output=True, text=True,
