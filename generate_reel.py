@@ -21,8 +21,11 @@ def get_audio_duration(path):
             "-of", "default=noprint_wrapper=1:nokey=1",
             path,
         ],
-        capture_output=True, text=True, check=True,
+        capture_output=True, text=True,
     )
+    if result.returncode != 0:
+        print("ffprobe stderr:", result.stderr)
+        raise RuntimeError(f"ffprobe failed on {path}")
     return float(result.stdout.strip())
 
 
