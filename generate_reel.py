@@ -1,8 +1,25 @@
+import re
 import subprocess
 import asyncio
 import edge_tts
 
 from script import generate_concept, generate_image
+
+
+def clean_for_narration(text):
+    """Strip hashtags and emoji so the voiceover doesn't read them aloud."""
+    text = re.sub(r"#\S+", "", text)
+    emoji_pattern = re.compile(
+        "["
+        "\U0001F300-\U0001FAFF"
+        "\U00002600-\U000027BF"
+        "\U0001F000-\U0001F2FF"
+        "\U00002190-\U000021FF"
+        "]+",
+        flags=re.UNICODE,
+    )
+    text = emoji_pattern.sub("", text)
+    return re.sub(r"\s+", " ", text).strip()
 
 
 def generate_voiceover(text, output_path="voice.mp3"):
@@ -69,16 +86,21 @@ def build_video(image_path, audio_path, subtitle_path, duration, output_path="re
     )
     cmd = [
         "ffmpeg", "-y",
+        "-framerate", str(fps),
         "-loop", "1", "-i", image_path,
         "-i", audio_path,
         "-filter_complex", filter_complex,
         "-map", "0:v", "-map", "1:a",
-        "-c:v", "libx264", "-c:a", "aac",
+        "-c:v", "libx264", "-pix_fmt", "yuv420p",
+        "-c:a", "aac",
         "-shortest",
         "-t", str(duration),
         output_path,
     ]
-    subprocess.run(cmd, check=True)
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        print("ffmpeg stderr:", result.stderr[-3000:])
+        raise RuntimeError("ffmpeg failed")
     return output_path
 
 
@@ -94,7 +116,8 @@ def main():
     print("Image saved.")
 
     print("Step 3: generating voiceover...")
-    narration_text = concept["caption"]
+    narration_text = clean_for_narration(concept["caption"])
+    print("Narration text:", narration_text)
     generate_voiceover(narration_text, "voice.mp3")
     print("Voiceover saved.")
 
