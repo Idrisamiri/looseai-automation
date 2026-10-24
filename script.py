@@ -121,19 +121,26 @@ def generate_concept():
             }
         ],
     }
-    resp = requests.post(url, headers=headers, json=payload, timeout=60)
-    resp.raise_for_status()
-    content = resp.json()["choices"][0]["message"]["content"]
+    last_content = None
+    for attempt in range(3):
+        resp = requests.post(url, headers=headers, json=payload, timeout=60)
+        resp.raise_for_status()
+        content = resp.json()["choices"][0]["message"].get("content") or ""
+        last_content = content
 
-    # Strip markdown code fences if the model wrapped its JSON in them
-    content = content.strip()
-    if content.startswith("```"):
-        content = content.split("```")[1]
-        if content.startswith("json"):
-            content = content[4:]
-        content = content.strip()
+        # Pull out the JSON object even if the model added code fences or extra text around it
+        first = content.find("{")
+        last = content.rfind("}")
+        if first != -1 and last > first:
+            try:
+                return json.loads(content[first:last + 1])
+            except json.JSONDecodeError:
+                pass
 
-    return json.loads(content)
+        print(f"Attempt {attempt + 1}: Groq did not return valid JSON. Raw reply: {content[:300]!r}")
+        time.sleep(3)
+
+    raise RuntimeError(f"Could not get valid JSON from Groq after 3 attempts. Last reply: {last_content[:300]!r}")
 
 
 def generate_image(prompt):
