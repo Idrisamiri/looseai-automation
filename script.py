@@ -7,7 +7,8 @@ import random
 
 
 GROQ_API_KEY = os.environ["GROQ_API_KEY"]
-HF_API_KEY = os.environ["HF_API_KEY"]
+CLOUDFLARE_ACCOUNT_ID = os.environ["CLOUDFLARE_ACCOUNT_ID"]
+CLOUDFLARE_API_TOKEN = os.environ["CLOUDFLARE_API_TOKEN"]
 IMGBB_API_KEY = os.environ["IMGBB_API_KEY"]
 IG_ACCESS_TOKEN = os.environ["IG_ACCESS_TOKEN"]
 IG_USER_ID = os.environ["IG_USER_ID"]
@@ -136,12 +137,34 @@ def generate_concept():
 
 
 def generate_image(prompt):
-    from huggingface_hub import InferenceClient
+    """Generate an image with Cloudflare Workers AI (FLUX.1 schnell) and return PNG bytes."""
     import io
+    from PIL import Image
 
-    client = InferenceClient(api_key=HF_API_KEY)
-    image = client.text_to_image(prompt, model="black-forest-labs/FLUX.1-schnell")
+    url = (
+        f"https://api.cloudflare.com/client/v4/accounts/{CLOUDFLARE_ACCOUNT_ID}"
+        "/ai/run/@cf/black-forest-labs/flux-1-schnell"
+    )
+    headers = {
+        "Authorization": f"Bearer {CLOUDFLARE_API_TOKEN}",
+        "Content-Type": "application/json",
+    }
 
+    resp = None
+    for attempt in range(3):
+        resp = requests.post(url, headers=headers, json={"prompt": prompt[:2048]}, timeout=120)
+        if resp.status_code == 200:
+            break
+        print(f"Attempt {attempt + 1}: Cloudflare error {resp.status_code}: {resp.text[:300]}")
+        time.sleep(10)
+    resp.raise_for_status()
+
+    data = resp.json()
+    result = data.get("result", data)
+    image_b64 = result["image"]
+
+    # Cloudflare returns a base64 JPEG; convert to PNG so everything downstream stays the same
+    image = Image.open(io.BytesIO(base64.b64decode(image_b64)))
     buf = io.BytesIO()
     image.save(buf, format="PNG")
     return buf.getvalue()
